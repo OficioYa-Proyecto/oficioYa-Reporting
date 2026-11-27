@@ -21,6 +21,6 @@ public class CalculadorTarifaPromedio implements CalculadorIndicador {
     public Indicador calcular(DatosPlataforma actual, DatosPlataforma anterior) {
         return new Indicador(tipo(), Math.round(actual.demanda().tarifaPromedio()),
                 (double) Math.round(anterior.demanda().tarifaPromedio()), "COP",
-                "Promedio de las solicitudes del periodo");
+                "Valor típico (mediana) de las tarifas por trabajo publicadas");
     }
 }

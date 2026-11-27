@@ -1,5 +1,7 @@
 package edu.eci.dosw.oficioya.reporting.dto;
 
+import java.util.List;
+
 /**
  * Lo que Reputation (Squad 5) entrega vía Orchestrator para un periodo
  * ({@code GET /api/v1/reputation/estadisticas}). {@code trabajadoresPausados} es el estado actual: Reputation es quien
@@ -11,11 +13,16 @@ public record EstadisticasReputacionDTO(
         long resenasReportadas,
         long reportesPendientes,
         long reportesResueltos,
-        long trabajadoresPausados) {
+        long trabajadoresPausados,
+        List<CumplidosTrabajadorDTO> cumplidosPorTrabajador) {
+
+    public EstadisticasReputacionDTO {
+        cumplidosPorTrabajador = cumplidosPorTrabajador == null ? List.of() : List.copyOf(cumplidosPorTrabajador);
+    }
 
     /** Sin el conteo de pausados (versiones de Reputation anteriores lo omiten y llega en 0). */
     public EstadisticasReputacionDTO(long totalResenas, double calificacionPromedio, long resenasReportadas,
                                      long reportesPendientes, long reportesResueltos) {
-        this(totalResenas, calificacionPromedio, resenasReportadas, reportesPendientes, reportesResueltos, 0);
+        this(totalResenas, calificacionPromedio, resenasReportadas, reportesPendientes, reportesResueltos, 0, null);
     }
 }

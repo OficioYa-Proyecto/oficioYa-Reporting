@@ -11,11 +11,11 @@ public enum TipoEstadistica {
     REPORTES_DE_RESENAS_POR_ESTADO("Reportes de reseñas por estado", "Reportes recibidos en el periodo"),
     CUENTAS_POR_ESTADO("Cuentas activas e inactivas", "Estado actual de las cuentas de la plataforma"),
     USUARIOS_ACTIVOS_POR_DIA("Usuarios activos por día", "Usuarios que usaron la plataforma cada día del periodo"),
-    SOLICITUDES_POR_OFICIO("Categorías más apetecidas", "Solicitudes creadas en el periodo por oficio"),
+    SOLICITUDES_POR_OFICIO("Categorías más apetecidas", "Servicios cumplidos en el periodo por oficio del trabajador"),
     SOLICITUDES_POR_ZONA("Zonas más concurridas", "Solicitudes creadas en el periodo por zona"),
     SOLICITUDES_POR_FRANJA("Franjas horarias con más solicitudes",
             "Solicitudes del periodo por franja de 6 horas, de mayor a menor"),
-    TARIFA_PROMEDIO_POR_OFICIO("Tarifa promedio por oficio", "Tarifa promedio (COP) de las solicitudes del periodo");
+    TARIFA_PROMEDIO_POR_OFICIO("Tarifa promedio por oficio", "Valor típico (mediana) por trabajo, en COP, que publican los trabajadores");
 
     private final String nombre;
     private final String descripcion;

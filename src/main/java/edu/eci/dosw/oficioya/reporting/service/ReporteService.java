@@ -32,6 +32,7 @@ import edu.eci.dosw.oficioya.reporting.domain.TipoReporte;
 import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorIndicador;
 import edu.eci.dosw.oficioya.reporting.dto.ArchivoExportado;
 import edu.eci.dosw.oficioya.reporting.dto.ConteoDTO;
+import edu.eci.dosw.oficioya.reporting.dto.CumplidosTrabajadorDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasReputacionDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasServiciosDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasTrabajadoresDTO;
@@ -50,6 +51,8 @@ public class ReporteService {
 
     private static final Logger log = LoggerFactory.getLogger(ReporteService.class);
 
+    /** Servicios cumplidos de un trabajador que ya no está activo en Worker (o que Worker no devolvió). */
+    static final String OFICIO_DESCONOCIDO = "Otros oficios";
     static final String FUENTE_SERVICE = "Service";
     static final String FUENTE_WORKER = "Worker";
     static final String FUENTE_REPUTATION = "Reputation";
@@ -183,10 +186,11 @@ public class ReporteService {
                 REPUTACION_SIN_DATOS, FUENTE_REPUTATION, sinDatos);
         EstadisticasUsuariosDTO usuarios = consultar(() -> orquestador.estadisticasUsuarios(periodo),
                 USUARIOS_SIN_DATOS, FUENTE_USERS, sinDatos);
+        List<ConteoDTO> cumplidosPorOficio = cumplidosPorOficio(servicios, reputacion, trabajadores);
         return new DatosPlataforma(periodo,
                 servicios.solicitudesPorEstado() == null ? Map.of() : servicios.solicitudesPorEstado(),
                 porDia(periodo, servicios.cumplidosPorDia()),
-                puntos(servicios.cumplidosPorOficio()),
+                puntos(cumplidosPorOficio),
                 trabajadores.activos(), trabajadores.pausadosVoluntarios(),
                 trabajadores.pausadosPorReputacion() + reputacion.trabajadoresPausados(),
                 puntos(trabajadores.activosPorOficio()),
@@ -194,9 +198,43 @@ public class ReporteService {
                 reputacion.reportesResueltos(),
                 new DatosDemanda(usuarios.cuentasActivas(), usuarios.cuentasInactivas(),
                         porDia(periodo, usuarios.activosPorDia()),
-                        puntos(servicios.solicitudesPorOficio()), puntos(servicios.solicitudesPorZona()),
-                        servicios.tarifaPromedio() == null ? 0 : servicios.tarifaPromedio(),
-                        puntos(servicios.tarifaPromedioPorOficio()), puntos(servicios.solicitudesPorFranja())));
+                        puntos(vacia(servicios.solicitudesPorOficio()) ? cumplidosPorOficio
+                                : servicios.solicitudesPorOficio()),
+                        puntos(servicios.solicitudesPorZona()),
+                        tarifaPromedio(servicios, trabajadores),
+                        puntos(vacia(servicios.tarifaPromedioPorOficio()) ? trabajadores.tarifaPorTrabajoPorOficio()
+                                : servicios.tarifaPromedioPorOficio()),
+                        puntos(servicios.solicitudesPorFranja())));
+    }
+
+    /**
+     * Servicios cumplidos por oficio. Service aún no guarda el oficio de cada solicitud, así que si no lo envía se
+     * calcula con los cumplidos de cada trabajador (Reputation) y su oficio principal (Worker).
+     */
+    static List<ConteoDTO> cumplidosPorOficio(EstadisticasServiciosDTO servicios, EstadisticasReputacionDTO reputacion,
+                                              EstadisticasTrabajadoresDTO trabajadores) {
+        if (!vacia(servicios.cumplidosPorOficio())) {
+            return servicios.cumplidosPorOficio();
+        }
+        return reputacion.cumplidosPorTrabajador().stream()
+                .collect(Collectors.groupingBy(
+                        c -> trabajadores.oficioPorCuenta().getOrDefault(c.trabajadorId(), OFICIO_DESCONOCIDO),
+                        Collectors.summingLong(CumplidosTrabajadorDTO::cantidad)))
+                .entrySet().stream()
+                .map(e -> new ConteoDTO(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    /** Tarifa promedio de Service si la envía; si no, el promedio de las tarifas "por trabajo" publicadas en Worker. */
+    private static double tarifaPromedio(EstadisticasServiciosDTO servicios, EstadisticasTrabajadoresDTO trabajadores) {
+        if (servicios.tarifaPromedio() != null && servicios.tarifaPromedio() > 0) {
+            return servicios.tarifaPromedio();
+        }
+        return trabajadores.tarifaPromedioPorTrabajo() == null ? 0 : trabajadores.tarifaPromedioPorTrabajo();
+    }
+
+    private static boolean vacia(List<?> lista) {
+        return lista == null || lista.isEmpty();
     }
 
     /** Un punto por cada día del periodo; los días sin datos quedan en 0 para que la gráfica no tenga huecos. */
