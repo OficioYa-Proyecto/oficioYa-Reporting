@@ -197,7 +197,7 @@ public class ReporteService {
                 reputacion.calificacionPromedio(), reputacion.resenasReportadas(), reputacion.reportesPendientes(),
                 reputacion.reportesResueltos(),
                 new DatosDemanda(usuarios.cuentasActivas(), usuarios.cuentasInactivas(),
-                        porDia(periodo, usuarios.activosPorDia()),
+                        porDia(periodo, activosPorDia(usuarios, reputacion)),
                         puntos(vacia(servicios.solicitudesPorOficio()) ? cumplidosPorOficio
                                 : servicios.solicitudesPorOficio()),
                         puntos(servicios.solicitudesPorZona()),
@@ -231,6 +231,19 @@ public class ReporteService {
             return servicios.tarifaPromedio();
         }
         return trabajadores.tarifaPromedioPorTrabajo() == null ? 0 : trabajadores.tarifaPromedioPorTrabajo();
+    }
+
+    /**
+     * Usuarios activos por día de Users si los envía. Users todavía no los tiene, así que se usan las personas con un
+     * servicio cumplido o una reseña cada día (Reputation): es parcial, no cuenta a quien solo buscó o pidió.
+     */
+    static List<ConteoDTO> activosPorDia(EstadisticasUsuariosDTO usuarios, EstadisticasReputacionDTO reputacion) {
+        if (!vacia(usuarios.activosPorDia())) {
+            return usuarios.activosPorDia();
+        }
+        return reputacion.usuariosConActividadPorDia().stream()
+                .map(a -> new ConteoDTO(a.fecha(), a.cantidad()))
+                .toList();
     }
 
     private static boolean vacia(List<?> lista) {

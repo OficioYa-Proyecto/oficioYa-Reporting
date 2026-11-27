@@ -19,9 +19,9 @@ public class CalculadorPromedioUsuariosActivos implements CalculadorIndicador {
 
     @Override
     public Indicador calcular(DatosPlataforma actual, DatosPlataforma anterior) {
-        // Users todavía no entrega la actividad por día: se dice en vez de mostrar un 0 que parece real.
         String detalle = actual.demanda().usuariosActivosPorDia().stream().allMatch(p -> p.valor() == 0)
-                ? "Users aún no entrega la actividad diaria" : "Promedio diario en el periodo";
+                ? "Sin servicios cumplidos ni reseñas en el periodo"
+                : "Promedio diario de personas con un servicio cumplido o una reseña";
         return new Indicador(tipo(), actual.demanda().promedioUsuariosActivos(),
                 anterior.demanda().promedioUsuariosActivos(), "usuarios por día", detalle);
     }

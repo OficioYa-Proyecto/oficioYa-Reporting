@@ -10,7 +10,7 @@ public enum TipoEstadistica {
     TRABAJADORES_POR_OFICIO("Trabajadores activos por oficio", "Oferta actual de trabajadores por oficio"),
     REPORTES_DE_RESENAS_POR_ESTADO("Reportes de reseñas por estado", "Reportes recibidos en el periodo"),
     CUENTAS_POR_ESTADO("Cuentas activas e inactivas", "Estado actual de las cuentas de la plataforma"),
-    USUARIOS_ACTIVOS_POR_DIA("Usuarios activos por día", "Usuarios que usaron la plataforma cada día del periodo"),
+    USUARIOS_ACTIVOS_POR_DIA("Usuarios con actividad por día", "Personas con un servicio cumplido o una reseña cada día"),
     SOLICITUDES_POR_OFICIO("Categorías más apetecidas", "Servicios cumplidos en el periodo por oficio del trabajador"),
     SOLICITUDES_POR_ZONA("Zonas más concurridas", "Solicitudes creadas en el periodo por zona"),
     SOLICITUDES_POR_FRANJA("Franjas horarias con más solicitudes",

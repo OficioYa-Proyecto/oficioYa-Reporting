@@ -40,6 +40,7 @@ import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorTasaCancelacio
 import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorTrabajadoresActivos;
 import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorTrabajadoresPausados;
 import edu.eci.dosw.oficioya.reporting.dto.ArchivoExportado;
+import edu.eci.dosw.oficioya.reporting.dto.ActividadDiaDTO;
 import edu.eci.dosw.oficioya.reporting.dto.ConteoDTO;
 import edu.eci.dosw.oficioya.reporting.dto.CumplidosTrabajadorDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasReputacionDTO;
@@ -150,6 +151,18 @@ class ReporteServiceTest {
                 new EstadisticasReputacionDTO(0, 0, 0, 0, 0, 0, List.of(new CumplidosTrabajadorDTO(retirado, 2))),
                 new EstadisticasTrabajadoresDTO(0, 0, 0, List.of())))
                 .containsExactly(new ConteoDTO(ReporteService.OFICIO_DESCONOCIDO, 2));
+    }
+
+    @Test
+    void sinActividadDeUsersUsaLaDeReputation() {
+        EstadisticasReputacionDTO reputacion = new EstadisticasReputacionDTO(0, 0, 0, 0, 0, 0, null,
+                List.of(new ActividadDiaDTO("2026-10-04", 6), new ActividadDiaDTO("2026-10-05", 2)));
+        assertThat(ReporteService.activosPorDia(new EstadisticasUsuariosDTO(10, 1, List.of()), reputacion))
+                .containsExactly(new ConteoDTO("2026-10-04", 6), new ConteoDTO("2026-10-05", 2));
+        // si Users ya los envía, se usan los de Users
+        assertThat(ReporteService.activosPorDia(
+                new EstadisticasUsuariosDTO(10, 1, List.of(new ConteoDTO("2026-10-04", 40))), reputacion))
+                .containsExactly(new ConteoDTO("2026-10-04", 40));
     }
 
     @Test

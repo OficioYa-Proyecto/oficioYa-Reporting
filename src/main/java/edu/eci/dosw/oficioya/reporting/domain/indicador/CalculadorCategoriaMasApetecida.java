@@ -20,7 +20,7 @@ public class CalculadorCategoriaMasApetecida implements CalculadorIndicador {
     @Override
     public Indicador calcular(DatosPlataforma actual, DatosPlataforma anterior) {
         return actual.demanda().categoriaMasApetecida()
-                .map(p -> new Indicador(tipo(), p.valor(), null, "solicitudes", p.etiqueta()))
-                .orElseGet(() -> new Indicador(tipo(), 0, null, "solicitudes", "Sin servicios cumplidos en el periodo"));
+                .map(p -> new Indicador(tipo(), p.valor(), null, "servicios cumplidos", p.etiqueta()))
+                .orElseGet(() -> new Indicador(tipo(), 0, null, "servicios cumplidos", "Sin servicios cumplidos en el periodo"));
     }
 }
