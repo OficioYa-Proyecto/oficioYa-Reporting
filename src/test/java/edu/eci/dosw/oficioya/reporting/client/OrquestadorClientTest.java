@@ -42,7 +42,7 @@ class OrquestadorClientTest {
         RestClient.Builder builder = RestClient.builder();
         servidor = MockRestServiceServer.bindTo(builder).build();
         cliente = new OrquestadorRestClient(builder, BASE, "/api/v1/services/reports",
-                "/api/v1/workers/stats", "/api/v1/reputation/estadisticas",
+                "/api/v1/workers", "/api/v1/reputation/estadisticas",
                 "/api/v1/users/stats/accounts");
     }
 
@@ -62,13 +62,17 @@ class OrquestadorClientTest {
                         {"total": 1300, "byStatus": {"COMPLETED": 1248, "PENDING": 52},
                          "byNeighborhood": {"Chapinero": 700}, "byHour": {"9": 1000, "19": 300}}""",
                         MediaType.APPLICATION_JSON));
-        servidor.expect(requestTo(BASE + "/api/v1/workers/stats"))
-                .andRespond(withSuccess("{\"activos\": 400, \"pausadosVoluntarios\": 12, \"pausadosPorReputacion\": 6}",
+        servidor.expect(requestTo(BASE + "/api/v1/workers"))
+                .andRespond(withSuccess("""
+                        [{"id": "a", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Plomero"}}},
+                         {"id": "b", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Pintor"}}},
+                         {"id": "c", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Plomero"}}}]""",
                         MediaType.APPLICATION_JSON));
         servidor.expect(requestTo(BASE + "/api/v1/reputation/estadisticas" + CONSULTA))
                 .andRespond(withSuccess("""
                         {"totalResenas": 500, "calificacionPromedio": 4.6, "resenasReportadas": 7,
-                         "reportesPendientes": 5, "reportesResueltos": 2}""", MediaType.APPLICATION_JSON));
+                         "reportesPendientes": 5, "reportesResueltos": 2, "trabajadoresPausados": 3}""",
+                        MediaType.APPLICATION_JSON));
         servidor.expect(requestTo(BASE + "/api/v1/users/stats/accounts?from=2000-01-01&to=2026-10-10"))
                 .andExpect(header("Authorization", "Bearer token-admin"))
                 .andRespond(withSuccess("""
@@ -82,8 +86,12 @@ class OrquestadorClientTest {
         assertThat(servicios.solicitudesPorEstado()).containsEntry("CUMPLIDA", 1248L).containsEntry("PENDIENTE", 52L);
         assertThat(servicios.solicitudesPorZona()).containsExactly(new ConteoDTO("Chapinero", 700));
         assertThat(servicios.solicitudesPorFranja()).extracting(ConteoDTO::cantidad).containsExactly(0L, 1000L, 0L, 300L);
-        assertThat(trabajadores.pausadosVoluntarios()).isEqualTo(12);
-        assertThat(cliente.estadisticasReputacion(SEMANA).reportesPendientes()).isEqualTo(5);
+        assertThat(trabajadores.activos()).isEqualTo(3);
+        assertThat(trabajadores.activosPorOficio())
+                .containsExactly(new ConteoDTO("Plomero", 2), new ConteoDTO("Pintor", 1));
+        var reputacion = cliente.estadisticasReputacion(SEMANA);
+        assertThat(reputacion.reportesPendientes()).isEqualTo(5);
+        assertThat(reputacion.trabajadoresPausados()).isEqualTo(3);
         EstadisticasUsuariosDTO usuarios = cliente.estadisticasUsuarios(SEMANA);
         assertThat(usuarios.cuentasActivas()).isEqualTo(1480);
         assertThat(usuarios.cuentasInactivas()).isEqualTo(236);
@@ -94,7 +102,7 @@ class OrquestadorClientTest {
     @Test
     void erroresORespuestasVaciasSonFallasDeIntegracion() {
         servidor.expect(requestTo(BASE + "/api/v1/services/reports" + CONSULTA_SERVICE)).andRespond(withServerError());
-        servidor.expect(requestTo(BASE + "/api/v1/workers/stats")).andRespond(withSuccess());
+        servidor.expect(requestTo(BASE + "/api/v1/workers")).andRespond(withSuccess());
         assertThatThrownBy(() -> cliente.estadisticasServicios(SEMANA)).isInstanceOf(IntegracionException.class);
         assertThatThrownBy(() -> cliente.estadisticasTrabajadores())
                 .isInstanceOf(IntegracionException.class)

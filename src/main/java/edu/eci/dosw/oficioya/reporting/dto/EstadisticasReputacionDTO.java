@@ -2,12 +2,20 @@ package edu.eci.dosw.oficioya.reporting.dto;
 
 /**
  * Lo que Reputation (Squad 5) entrega vía Orchestrator para un periodo
- * ({@code GET /api/v1/reputation/estadisticas}).
+ * ({@code GET /api/v1/reputation/estadisticas}). {@code trabajadoresPausados} es el estado actual: Reputation es quien
+ * pausa a un trabajador por su calificación y Worker no lista a los pausados.
  */
 public record EstadisticasReputacionDTO(
         long totalResenas,
         double calificacionPromedio,
         long resenasReportadas,
         long reportesPendientes,
-        long reportesResueltos) {
+        long reportesResueltos,
+        long trabajadoresPausados) {
+
+    /** Sin el conteo de pausados (versiones de Reputation anteriores lo omiten y llega en 0). */
+    public EstadisticasReputacionDTO(long totalResenas, double calificacionPromedio, long resenasReportadas,
+                                     long reportesPendientes, long reportesResueltos) {
+        this(totalResenas, calificacionPromedio, resenasReportadas, reportesPendientes, reportesResueltos, 0);
+    }
 }
