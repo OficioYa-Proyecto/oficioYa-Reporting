@@ -12,7 +12,7 @@ public enum TipoIndicador {
     CALIFICACION_PROMEDIO("Calificación promedio"),
     CUENTAS_ACTIVAS("Cuentas activas"),
     CUENTAS_INACTIVAS("Cuentas inactivas"),
-    PROMEDIO_USUARIOS_ACTIVOS("Promedio de usuarios activos"),
+    PROMEDIO_USUARIOS_ACTIVOS("Usuarios con actividad"),
     CATEGORIA_MAS_APETECIDA("Categoría más apetecida"),
     TARIFA_PROMEDIO("Tarifa promedio");
 
