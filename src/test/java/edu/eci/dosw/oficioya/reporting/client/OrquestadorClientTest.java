@@ -64,9 +64,13 @@ class OrquestadorClientTest {
                         MediaType.APPLICATION_JSON));
         servidor.expect(requestTo(BASE + "/api/v1/workers"))
                 .andRespond(withSuccess("""
-                        [{"id": "a", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Plomero"}}},
-                         {"id": "b", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Pintor"}}},
-                         {"id": "c", "status": "ACTIVE", "primaryTrade": {"trade": {"name": "Plomero"}}}]""",
+                        [{"id": "a", "userId": "00000000-0000-0000-0000-00000000000a", "status": "ACTIVE",
+                          "primaryTrade": {"approxRate": 50000, "rateUnit": "PER_JOB", "trade": {"name": "Plomero"}},
+                          "secondaryTrades": [{"approxRate": 20000, "rateUnit": "PER_HOUR", "trade": {"name": "Pintor"}}]},
+                         {"id": "b", "status": "ACTIVE",
+                          "primaryTrade": {"approxRate": 30000, "rateUnit": "PER_JOB", "trade": {"name": "Pintor"}}},
+                         {"id": "c", "status": "ACTIVE",
+                          "primaryTrade": {"approxRate": 70000, "rateUnit": "PER_JOB", "trade": {"name": "Plomero"}}}]""",
                         MediaType.APPLICATION_JSON));
         servidor.expect(requestTo(BASE + "/api/v1/reputation/estadisticas" + CONSULTA))
                 .andRespond(withSuccess("""
@@ -87,6 +91,11 @@ class OrquestadorClientTest {
         assertThat(servicios.solicitudesPorZona()).containsExactly(new ConteoDTO("Chapinero", 700));
         assertThat(servicios.solicitudesPorFranja()).extracting(ConteoDTO::cantidad).containsExactly(0L, 1000L, 0L, 300L);
         assertThat(trabajadores.activos()).isEqualTo(3);
+        // la tarifa por hora no entra en el promedio "por trabajo"
+        assertThat(trabajadores.tarifaPromedioPorTrabajo()).isEqualTo(50_000.0);
+        assertThat(trabajadores.tarifaPorTrabajoPorOficio())
+                .containsExactly(new ConteoDTO("Plomero", 60_000), new ConteoDTO("Pintor", 30_000));
+        assertThat(trabajadores.oficioPorCuenta()).hasSize(1).containsValue("Plomero");
         assertThat(trabajadores.activosPorOficio())
                 .containsExactly(new ConteoDTO("Plomero", 2), new ConteoDTO("Pintor", 1));
         var reputacion = cliente.estadisticasReputacion(SEMANA);

@@ -180,7 +180,7 @@ class DominioReportingTest {
         assertThat(categoria.valor()).isEqualTo(120);
         assertThat(categoria.detalle()).isEqualTo("Plomería");
         assertThat(new CalculadorCategoriaMasApetecida().calcular(anterior, anterior).detalle())
-                .isEqualTo("Sin solicitudes en el periodo");
+                .isEqualTo("Sin servicios cumplidos en el periodo");
 
         Indicador tarifa = new CalculadorTarifaPromedio().calcular(actual, anterior);
         assertThat(tarifa.valor()).isEqualTo(62_450);

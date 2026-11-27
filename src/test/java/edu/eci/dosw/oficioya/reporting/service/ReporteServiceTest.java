@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorTrabajadoresAc
 import edu.eci.dosw.oficioya.reporting.domain.indicador.CalculadorTrabajadoresPausados;
 import edu.eci.dosw.oficioya.reporting.dto.ArchivoExportado;
 import edu.eci.dosw.oficioya.reporting.dto.ConteoDTO;
+import edu.eci.dosw.oficioya.reporting.dto.CumplidosTrabajadorDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasReputacionDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasServiciosDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasTrabajadoresDTO;
@@ -122,6 +124,32 @@ class ReporteServiceTest {
         assertThat(usuarios.indicadores()).extracting(Indicador::valor).containsExactly(1480.0, 236.0, 100.0);
         // un día con datos y seis en 0: el promedio es 700 / 7
         assertThat(usuarios.estadisticas().get(1).puntos()).hasSize(7);
+    }
+
+    @Test
+    void sinOficiosNiTarifasDeServiceUsaReputationYWorker() {
+        UUID ana = UUID.randomUUID();
+        UUID luis = UUID.randomUUID();
+        UUID retirado = UUID.randomUUID();
+        when(orquestador.estadisticasServicios(SEMANA)).thenReturn(new EstadisticasServiciosDTO(
+                Map.of("CUMPLIDA", 6L), List.of(), List.of(), List.of(), List.of(), null, List.of()));
+        when(orquestador.estadisticasTrabajadores()).thenReturn(new EstadisticasTrabajadoresDTO(2, 0, 0, List.of(),
+                Map.of(ana, "Plomero", luis, "Pintor"), 52_000.0, List.of(new ConteoDTO("Plomero", 60_000))));
+        when(orquestador.estadisticasReputacion(SEMANA)).thenReturn(new EstadisticasReputacionDTO(5, 4.6, 0, 0, 0, 0,
+                List.of(new CumplidosTrabajadorDTO(ana, 4), new CumplidosTrabajadorDTO(luis, 1),
+                        new CumplidosTrabajadorDTO(retirado, 1))));
+
+        Reporte reporte = servicio.generar(TipoReporte.SERVICIOS, SEMANA, "admin-1");
+
+        Indicador categoria = reporte.indicadores().get(2);
+        assertThat(categoria.detalle()).isEqualTo("Plomero");
+        assertThat(categoria.valor()).isEqualTo(4);
+        assertThat(reporte.indicadores().get(3).valor()).isEqualTo(52_000);
+        assertThat(ReporteService.cumplidosPorOficio(
+                new EstadisticasServiciosDTO(Map.of(), List.of(), List.of()),
+                new EstadisticasReputacionDTO(0, 0, 0, 0, 0, 0, List.of(new CumplidosTrabajadorDTO(retirado, 2))),
+                new EstadisticasTrabajadoresDTO(0, 0, 0, List.of())))
+                .containsExactly(new ConteoDTO(ReporteService.OFICIO_DESCONOCIDO, 2));
     }
 
     @Test

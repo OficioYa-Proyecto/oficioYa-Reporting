@@ -21,6 +21,6 @@ public class CalculadorCategoriaMasApetecida implements CalculadorIndicador {
     public Indicador calcular(DatosPlataforma actual, DatosPlataforma anterior) {
         return actual.demanda().categoriaMasApetecida()
                 .map(p -> new Indicador(tipo(), p.valor(), null, "solicitudes", p.etiqueta()))
-                .orElseGet(() -> new Indicador(tipo(), 0, null, "solicitudes", "Sin solicitudes en el periodo"));
+                .orElseGet(() -> new Indicador(tipo(), 0, null, "solicitudes", "Sin servicios cumplidos en el periodo"));
     }
 }
