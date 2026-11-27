@@ -13,11 +13,11 @@ oficioya:
   orquestador:
     # Toda comunicación con otros dominios o con la IA sale por el Orchestrator.
     base-url: ${ORQUESTADOR_URL:http://localhost:8080}
-    # Rutas del Orchestrator hacia cada dominio. Service, Users y Reputation confirmadas por Squad 1 (2026-11-19);
-    # la de Worker es la que sugirió Squad 1 y Worker todavía no la tiene.
+    # Rutas del Orchestrator hacia cada dominio. Service, Users y Reputation confirmadas por Squad 1 (2026-11-19).
+    # Worker no tiene ruta de estadísticas: se cuenta su lista de trabajadores activos (GET /api/v1/workers).
     rutas:
       estadisticas-servicios: /api/v1/services/reports
-      estadisticas-trabajadores: /api/v1/workers/stats
+      estadisticas-trabajadores: /api/v1/workers
       estadisticas-reputacion: /api/v1/reputation/estadisticas
       estadisticas-usuarios: /api/v1/users/stats/accounts
   reporting:

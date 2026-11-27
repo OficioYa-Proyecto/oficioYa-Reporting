@@ -1,9 +1,11 @@
 package edu.eci.dosw.oficioya.reporting.client;
 
 import java.time.LocalTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -15,11 +17,12 @@ import edu.eci.dosw.oficioya.reporting.dto.EstadisticasServiciosDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasTrabajadoresDTO;
 import edu.eci.dosw.oficioya.reporting.dto.EstadisticasUsuariosDTO;
 import edu.eci.dosw.oficioya.reporting.dto.ReporteServiceDTO;
+import edu.eci.dosw.oficioya.reporting.dto.TrabajadorWorkerDTO;
 import edu.eci.dosw.oficioya.reporting.exception.IntegracionException;
 
 /**
- * Implementación REST de {@link OrquestadorClient}. Las rutas son configurables. Service, Users y Reputation están
- * confirmadas por Squad 1; la de Worker es la sugerida por Squad 1 y Worker aún no la implementa.
+ * Implementación REST de {@link OrquestadorClient}. Las rutas son configurables y confirmadas por Squad 1. De Worker se
+ * usa su lista de trabajadores activos, porque no tiene una ruta de estadísticas.
  */
 @Component
 @Profile("!demo")
@@ -66,7 +69,19 @@ public class OrquestadorRestClient implements OrquestadorClient {
 
     @Override
     public EstadisticasTrabajadoresDTO estadisticasTrabajadores() {
-        return consultar(rutaTrabajadores, null, EstadisticasTrabajadoresDTO.class, "Worker");
+        // Formato real de Worker: lista de trabajadores activos; se cuentan aquí.
+        try {
+            List<TrabajadorWorkerDTO> trabajadores = restClient.get()
+                    .uri(uri -> uri.path(rutaTrabajadores).build())
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<TrabajadorWorkerDTO>>() { });
+            if (trabajadores == null) {
+                throw new IntegracionException("Worker respondió sin datos", null);
+            }
+            return TrabajadorWorkerDTO.aEstadisticas(trabajadores);
+        } catch (RestClientException e) {
+            throw new IntegracionException("No fue posible consultar los trabajadores de Worker", e);
+        }
     }
 
     @Override
